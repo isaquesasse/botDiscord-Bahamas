@@ -15,9 +15,9 @@ client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
-const CANAL_REGISTRO_ID = '1208280929496338453'; // ID do canal de registro
+const CANAL_REGISTRO_ID = '1255933823544463472'; // ID do canal de registro
 const CANAL_BAU_ID = '1255653467532427286'; // ID do canal para registro de baú
-const CANAL_PRESENCA_ID = '1255656689282056313'; // ID do canal para registro de presença
+const CANAL_PRESENCA_ID = '1255933823544463472'; // ID do canal para registro de presença
 const CARGO_MEMBRO_ID = '1173408869691686921'; // ID do cargo MEMBRO
 
 client.on('messageCreate', async message => {
@@ -52,7 +52,7 @@ client.on('messageCreate', async message => {
 
         await message.delete(); //deleta mensagem enviada pelo usuário
 
-        client.anuncioMessage = anuncioMessage; 
+        client.anuncioMessage = anuncioMessage;
     }
 
     if (message.content === '!registro') { //comando de registro de novo membro
@@ -60,7 +60,7 @@ client.on('messageCreate', async message => {
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId('openRegistroModal') //abre o modal de registro
-                    .setLabel('Registrar Novato') 
+                    .setLabel('Registrar Novato')
                     .setStyle(ButtonStyle.Primary),
             );
 
@@ -74,18 +74,18 @@ client.on('messageCreate', async message => {
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                    .setCustomId('openBauModal')
+                    .setCustomId('openBauModal') //abre o modal de baú
                     .setLabel('Registrar Baú')
                     .setStyle(ButtonStyle.Primary),
             );
 
-        await message.channel.send({
+        await message.channel.send({ //envia o texto com o botão
             content: 'Clique no botão abaixo para registrar um item no baú:',
             components: [row],
         });
     }
 
-    if (message.content === '!acao') {
+    if (message.content === '!acao') { //abre o comando !acao, para marcar uma nova ação
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
@@ -95,19 +95,19 @@ client.on('messageCreate', async message => {
             );
 
         await message.channel.send({
-            content: 'Clique no botão abaixo para criar uma ação:',
+            content: 'Clique no botão abaixo para marcar uma ação:',
             components: [row],
         });
     }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
-    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+    if (!interaction.isButton() && !interaction.isModalSubmit()) return; //se não for um botão/modal, retorna
 
-    if (interaction.customId === 'create_farm_channel') {
+    if (interaction.customId === 'create_farm_channel') { //se clicar no botão para criar uma nova pasta de farm
         const user = interaction.user;
 
-        await interaction.guild.channels.create({
+        await interaction.guild.channels.create({  //cria uma pasta de farm com o nome do usuario
             name: `farm-${user.username}`,
             type: ChannelType.GuildText,
             permissionOverwrites: [
@@ -120,7 +120,7 @@ client.on(Events.InteractionCreate, async interaction => {
                     allow: [PermissionsBitField.Flags.ViewChannel],
                 },
             ],
-        }).then(channel => {
+        }).then(channel => { //envia quais são as regras do canal de farm
             channel.send(`Olá ${user}, este é o seu canal de farm.
 
 **Regras:**
@@ -137,84 +137,107 @@ Pólvora:
             `);
         });
 
-        await interaction.reply({ content: 'O canal de farm foi criado com sucesso!', ephemeral: true });
+        await interaction.reply({ content: 'O canal de farm foi criado com sucesso!', ephemeral: true }); //retorna uma mensagem somente para o usuario
     }
 
-    if (interaction.customId.startsWith('openAnuncioModal_')) {
+    if (interaction.customId.startsWith('openAnuncioModal_')) { //abre o modal de anuncio
         const userId = interaction.customId.split('_')[1];
-        if (interaction.user.id !== userId) {
-            return interaction.reply({ content: 'Você não tem permissão para usar este botão.', ephemeral: true });
+        if (interaction.user.id !== userId) { //somente o usuário que criou o botão pode clicar no botão
+            return interaction.reply({ content: 'Você não tem permissão para usar este botão.', ephemeral: true }); //se não for o mesmo usuário que criou, responde essa mensagem
         }
-
+        //inicia os campos do formulario/modal
         const modal = new ModalBuilder()
             .setCustomId('anuncioModal')
-            .setTitle('Criar Anúncio');
+            .setTitle('Criar Anúncio'); //titulo da modal
 
         const tituloInput = new TextInputBuilder()
             .setCustomId('tituloInput')
-            .setLabel('Título do Anúncio')
+            .setLabel('Título do Anúncio') //campo titulo do anuncio
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
         const conteudoInput = new TextInputBuilder()
             .setCustomId('conteudoInput')
-            .setLabel('Conteúdo do Anúncio')
+            .setLabel('Conteúdo do Anúncio (opcional)') //campo conteúdo do anúncio
             .setStyle(TextInputStyle.Paragraph)
-            .setRequired(true);
+            .setRequired(false);
 
         const imagemInput = new TextInputBuilder()
             .setCustomId('imagemInput')
-            .setLabel('URL da Imagem (opcional)')
+            .setLabel('URL da Imagem (opcional)') //campo URL da imagem do anúncio
             .setStyle(TextInputStyle.Short)
             .setRequired(false);
 
         const autorInput = new TextInputBuilder()
             .setCustomId('autorInput')
-            .setLabel('Nome do Autor')
+            .setLabel('Nome do Autor') //campo nome do autor
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
+
+        const colorInput = new TextInputBuilder()
+            .setCustomId('colorInput')
+            .setLabel('Cor em HexaDecimal')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false);
 
         const tituloRow = new ActionRowBuilder().addComponents(tituloInput);
         const conteudoRow = new ActionRowBuilder().addComponents(conteudoInput);
         const imagemRow = new ActionRowBuilder().addComponents(imagemInput);
         const autorRow = new ActionRowBuilder().addComponents(autorInput);
+        const colorRow = new ActionRowBuilder().addComponents(colorInput);
 
-        modal.addComponents(tituloRow, conteudoRow, imagemRow, autorRow);
+        modal.addComponents(tituloRow, conteudoRow, imagemRow, autorRow, colorRow);
 
-        await interaction.showModal(modal);
+        await interaction.showModal(modal); //mostra o modal
     }
 
     if (interaction.customId === 'anuncioModal') {
         await interaction.deferUpdate();
-        const titulo = interaction.fields.getTextInputValue('tituloInput');
+        const titulo = interaction.fields.getTextInputValue('tituloInput'); //recebe o conteúdo das respostas do formulário
         const conteudo = interaction.fields.getTextInputValue('conteudoInput');
         const imagem = interaction.fields.getTextInputValue('imagemInput');
         const autor = interaction.fields.getTextInputValue('autorInput');
+        let color = interaction.fields.getTextInputValue('colorInput');;
 
-        const anuncioEmbed = new EmbedBuilder()
-            .setColor(0x0099ff)
-            .setTitle(`**${titulo}**`)
-            .setDescription(conteudo)
-            .setFooter({ text: `Autor: ${autor}` });
+        if (!color) {
+            color = '5FCB00';
+        } else {
+            color = color.replace('#', '');
+        }
+        try { //testa se a cor vai estar correta
+            const anuncioEmbed = new EmbedBuilder() //monta o modal
+                .setColor(`#${color}`)
+                .setTitle(`**${titulo}**`)
+                .setDescription(conteudo)
+                .setFooter({ text: `Autor: ${autor}` });
 
-        if (imagem) {
-            anuncioEmbed.setImage(imagem);
+            if (imagem) {
+                anuncioEmbed.setImage(imagem);
+            }
+
+            await interaction.channel.send({ embeds: [anuncioEmbed] });
+
+            const everyoneMessage = await interaction.channel.send('@everyone');
+            setTimeout(async () => {
+                await everyoneMessage.delete();
+            }, 5000);
+        } catch (error) { //envia mensagem de erro que se apaga após 5 segundos
+            const errorMessage = await interaction.channel.send(`Erro ao enviar o anúncio: ${error}`);
+            await interaction.user.send(`Informe ao desenvolvedor o erro (Discord: isakkkk). Ocorreu um erro no bot: ${error}`) //Mensagem de erro para o desenvolvedor 
+
+            setTimeout(async () => {
+                await errorMessage.delete();
+            }, 5000);
         }
 
-        await interaction.channel.send({ embeds: [anuncioEmbed] });
-        const everyoneMessage = await interaction.channel.send('@everyone');
-
-        if (client.anuncioMessage) {
+        if (client.anuncioMessage) { //se envia a mensagem, dele a mensagem do botão
             await client.anuncioMessage.delete();
             client.anuncioMessage = null;
         }
 
-        setTimeout(async () => {
-            await everyoneMessage.delete();
-        }, 5000);
     }
 
-    if (interaction.customId === 'openRegistroModal') {
+    if (interaction.customId === 'openRegistroModal') { //abre o modal do registro
         const modal = new ModalBuilder()
             .setCustomId('registroModal')
             .setTitle('Registro de Novato');
@@ -253,7 +276,7 @@ Pólvora:
         await interaction.showModal(modal);
     }
 
-    if (interaction.customId === 'registroModal') {
+    if (interaction.customId === 'registroModal') { //envia os dados do registro
         await interaction.deferUpdate();
         const nome = interaction.fields.getTextInputValue('nomeInput');
         const identidade = interaction.fields.getTextInputValue('identidadeInput');
@@ -264,7 +287,7 @@ Pólvora:
         if (registroChannel) {
             const registroEmbed = new EmbedBuilder()
                 .setColor(0x00ff00)
-                .setTitle('Novo Registro de Novato')
+                .setTitle('Registro de Membro')
                 .addFields(
                     { name: 'Nome', value: nome },
                     { name: 'Identidade', value: identidade },
@@ -276,6 +299,7 @@ Pólvora:
             await registroChannel.send({ embeds: [registroEmbed] });
 
             const member = interaction.guild.members.cache.get(interaction.user.id);
+            member.setNickname(`[${identidade}] ${nome}`); //seta o nickname do usuario de acordo com o registro
             if (member) {
                 try {
                     await member.roles.add(CARGO_MEMBRO_ID);
@@ -290,7 +314,7 @@ Pólvora:
         }
     }
 
-    if (interaction.customId === 'openBauModal') {
+    if (interaction.customId === 'openBauModal') { //abre o modal do baú
         const modal = new ModalBuilder()
             .setCustomId('bauModal')
             .setTitle('Registro de Item no Baú');
@@ -347,7 +371,7 @@ Pólvora:
         }
     }
 
-    if (interaction.customId === 'openAcaoModal') {
+    if (interaction.customId === 'openAcaoModal') { //abre modal de marcar ação
         const modal = new ModalBuilder()
             .setCustomId('acaoModal')
             .setTitle('Criar Ação');
@@ -379,7 +403,7 @@ Pólvora:
         await interaction.showModal(modal);
     }
 
-    if (interaction.customId === 'acaoModal') {
+    if (interaction.customId === 'acaoModal') { //recebe e envia o modal de ação
         await interaction.deferUpdate();
         const responsavel = interaction.fields.getTextInputValue('responsavelInput');
         const local = interaction.fields.getTextInputValue('localInput');
@@ -400,7 +424,7 @@ Pólvora:
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`marcarPresenca_${acaoMessage.id}`)
+                    .setCustomId(`openPresencaModal`)
                     .setLabel('Marcar Presença')
                     .setStyle(ButtonStyle.Primary),
             );
@@ -410,13 +434,43 @@ Pólvora:
         await interaction.followUp({ content: 'Ação criada com sucesso!', ephemeral: true });
     }
 
-    if (interaction.customId.startsWith('marcarPresenca_')) {
-        const messageId = interaction.customId.split('_')[1];
+    if (interaction.customId === 'openPresencaModal') {//abre o modal de presença
+        const modal = new ModalBuilder()
+            .setCustomId('presencaModal')
+            .setTitle('Marcar Presença');
+
+        const nomeInput = new TextInputBuilder()
+            .setCustomId('nomeInput')
+            .setLabel('Nome')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true);
+
+        const idInput = new TextInputBuilder()
+            .setCustomId('idInput')
+            .setLabel('Id')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true);
+
+
+        const nomeRow = new ActionRowBuilder().addComponents(nomeInput);
+        const idRow = new ActionRowBuilder().addComponents(idInput);
+
+        modal.addComponents(nomeRow, idRow);
+
+        await interaction.showModal(modal);
+    }
+
+    if (interaction.customId === 'presencaModal') { //recebe a resposta do formulário e envia no canal de presença
+        await interaction.deferUpdate();
+
+        const nome = interaction.fields.getTextInputValue('nomeInput');
+        const id = interaction.fields.getTextInputValue('idInput');
+
         const presencaChannel = interaction.guild.channels.cache.get(CANAL_PRESENCA_ID);
 
         if (presencaChannel) {
-            await presencaChannel.send(`${interaction.user.username} marcou presença na ação.`);
-            await interaction.reply({ content: 'Presença marcada com sucesso!', ephemeral: true });
+            await presencaChannel.send(`[${id}] ${nome} marcou presença na ação.`);
+            // await interaction.reply({ content: 'Presença marcada com sucesso!', ephemeral: true });
         } else {
             await interaction.reply({ content: 'Canal de presença não encontrado.', ephemeral: true });
         }
